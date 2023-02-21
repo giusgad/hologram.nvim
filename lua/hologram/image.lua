@@ -9,7 +9,8 @@ local Image = {
 }
 Image.__index = Image
 
-function Image:new(source, keys)
+function Image:new(source, keys, auto_displayed)
+	auto_displayed = auto_displayed or false
 	keys = keys or {}
 	keys = vim.tbl_extend("keep", keys, {
 		format = 100,
@@ -43,15 +44,18 @@ function Image:new(source, keys)
 
 	terminal.send_graphics_command(keys, source)
 
-	Image.instances[keys.image_id] = setmetatable({
+	local image = setmetatable({
 		source = source,
 		transmit_keys = keys,
 		cols = cols,
 		rows = rows,
 		vpad = nil,
 	}, self)
+	if auto_displayed then
+		Image.instances[keys.image_id] = image
+	end
 
-	return Image.instances[keys.image_id]
+	return image
 end
 
 function Image:display(row, col, buf, keys)

@@ -58,8 +58,10 @@ function hologram.buf_render_images(buf, top, bot)
 		local curr_ids = {}
 		for _, ext in ipairs(exts) do
 			local id, row, col = unpack(ext)
-			Image.instances[id]:display(row + 1, 0, buf, {})
-			curr_ids[#curr_ids + 1] = id
+			if Image.instances[id] ~= nil then
+				Image.instances[id]:display(row + 1, 0, buf, {})
+				curr_ids[#curr_ids + 1] = id
+			end
 		end
 
 		if prev_ids[buf] ~= nil then
@@ -78,18 +80,21 @@ function hologram.buf_generate_images(buf, top, bot)
 	for n, line in ipairs(lines) do
 		local source = hologram.find_source(line)
 		if source ~= nil then
-			local img = Image:new(source, {})
+			local img = Image:new(source, {}, true)
 			img:display(top + n, 0, buf, {})
 		end
 	end
 end
 
 function hologram.buf_delete_images(buf, top, bot)
-	local exts = vim.api.nvim_buf_get_extmarks(buf, vim.g.hologram_extmark_ns, { top, 0 }, { bot, -1 }, {})
-
-	for _, ext in ipairs(exts) do
-		local id, _, _ = unpack(ext)
-		Image.instances[id]:delete(buf, { free = true })
+	local ok, exts = pcall(vim.api.nvim_buf_get_extmarks, buf, vim.g.hologram_extmark_ns, { top, 0 }, { bot, -1 }, {})
+	if ok then
+		for _, ext in ipairs(exts) do
+			local id, _, _ = unpack(ext)
+			if Image.instances[id] ~= nil then
+				Image.instances[id]:delete(buf, { free = true })
+			end
+		end
 	end
 end
 
